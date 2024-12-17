@@ -64,6 +64,7 @@ end
 
 local function attack_animation()
 	if not pn.has_tag(PEID, "attacking") then
+		beaver.play_sound("attack")
 		local attackanim = pn.add_entity()
 		pn.set_image(attackanim, "tileset")
 		pn.set_scale(attackanim, 5,5)
@@ -152,7 +153,6 @@ function player.update(dt)
 		-- RELEASE JUMP
 		if JUMP_CHARGER ~= config.base_jump and beaver.get_input("Z") == 0 then
 			pstate = "jump"
-
 			pn.manual_emit_particles(SMOKE_PE, 50, ppos.x, ppos.y + config.grid_size, {
 												linear_acceleration = {x = -50, y = -30},
 												lifetime = 1,
@@ -163,6 +163,8 @@ function player.update(dt)
 			})
 			pvel.y = -JUMP_CHARGER
 			JUMP_CHARGER = config.base_jump
+
+			beaver.play_sound("jump")
 		end
 
 	end

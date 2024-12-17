@@ -42,6 +42,8 @@ function LOAD()
 	})
 
 	pn.set_particle_emitter_auto(SMOKE_PE, true)
+	beaver.set_volume_music(40)
+	beaver.play_music("bgm1")
 end
 function UPDATE(dt)
 	pn.update_movement(dt)

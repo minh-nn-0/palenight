@@ -24,12 +24,14 @@ function collision.update()
 		if pn.colliding_with(eid, PEID) and not player.is_invicible() and
 			pn.get_state(eid) == "normal" and not pn.has_tag(eid, "attack_anim") then
 			pn.set_state(PEID, "hurt")
+			beaver.play_sound("hurt")
 		end
 
 		-- obstacle (attack animation colliding with "normal" entity that is not player) 
 		if pn.has_tag(eid, "attack_anim") then
 			for _, coll in ipairs(pn.find_collisions(eid)) do
 				if coll ~= PEID and pn.get_state(coll) == "normal" then
+					beaver.play_sound("hurt")
 					pn.set_state(coll, "die")
 					player.score = player.score + 1
 					local cbox = pn.get_cbox(coll)
