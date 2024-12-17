@@ -81,7 +81,6 @@ function UPDATE(dt)
 	pn.update_particle_emitter(dt)
 
 	particle.decrease_size_overtime(SMOKE_PE)
-	particle.decrease_size_overtime(COLLISION_PE)
 	pn.cleanup_entities();
 end
 function DRAW()

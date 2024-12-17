@@ -25,28 +25,29 @@ local function setup_obstacle_state(eid)
 end
 
 local function spawn_bat()
-	local bat = pn.add_entity()
-	pn.add_tag(bat, "bat")
-	pn.add_tag(bat, "no_gravity")
-	pn.set_image(bat, "tileset")
-	pn.set_tileanimation(bat, {
-		frames = {{37,200},{38,200},{39,200}},
-		framewidth = 8,
-		frameheight = 8,
-		["repeat"] = true
-	})
-	pn.set_scale(bat, config.pixel_size, config.pixel_size)
-	pn.set_position(bat,
-		config.logical_size[1],
-		config.logical_size[2] / 3 + (math.random(0, 3) * config.grid_size))
-	pn.set_velocity(bat,
-		math.random(-(config.base_velocity + 40), - (config.base_velocity - 40)),
-		0)
+	for i = 1,3 do
+		local bat = pn.add_entity()
+		pn.add_tag(bat, "bat")
+		pn.add_tag(bat, "no_gravity")
+		pn.set_image(bat, "tileset")
+		pn.set_tileanimation(bat, {
+			frames = {{37,200},{38,200},{39,200}},
+			framewidth = 8,
+			frameheight = 8,
+			["repeat"] = true
+		})
+		pn.set_scale(bat, config.pixel_size - 1.75, config.pixel_size - 1.75)
+		pn.set_position(bat,
+			config.logical_size[1] + i * 2,
+			config.logical_size[2] / 3 + (math.random(0, 3) * config.grid_size))
+		pn.set_velocity(bat,
+			math.random(-(config.base_velocity + 40), - (config.base_velocity - 40)),
+			0)
 
-	pn.set_cbox(bat, util.scale_rect_logical(config.cbox_of["bat"]))
-	setup_obstacle_state(bat)
-	pn.set_stopwatch(bat)
-
+		pn.set_cbox(bat, util.scale_rect_logical(config.cbox_of["bat"]))
+		setup_obstacle_state(bat)
+		pn.set_stopwatch(bat)
+	end
 end
 
 local function spawn_duck()
@@ -62,7 +63,7 @@ local function spawn_duck()
 		["repeat"] = true
 	})
 
-	pn.set_scale(duck, config.pixel_size, config.pixel_size)
+	pn.set_scale(duck, config.pixel_size - 1.5, config.pixel_size - 1.5)
 	pn.set_position(duck,
 		config.logical_size[1],
 		config.logical_size[2] / 3 + (math.random(0, 3) * config.grid_size))
@@ -143,6 +144,15 @@ function obstacle_spawner.update(dt)
 	end
 
 	pn.set_state(obstacles_spawner_eid, state)
+
+
+	for _,eid in ipairs(pn.get_entities_with_tags({"bat"})) do
+		if pn.get_state(eid) ~= "die" then
+			local sw = pn.get_stopwatch(eid)
+			local pos = pn.get_position(eid)
+			pn.set_position(eid, pos.x, 120 * math.sin(sw / 2 * 2 * math.pi) + config.logical_size[2]/2)
+		end
+	end
 end
 
 return obstacle_spawner

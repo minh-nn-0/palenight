@@ -12,6 +12,7 @@ function player.load()
 	pn.add_tag(PEID, "player");
 	pn.set_position(PEID, 20, config:ground_level() - config.grid_size)
 	pn.set_velocity(PEID, 0, 0)
+	pn.set_pivot(PEID, 3,6)
 
 	pn.set_stopwatch(PEID)
 	pn.set_cbox(PEID, util.scale_rect_logical(config.cbox_of["player"]))
@@ -93,15 +94,22 @@ function player.update(dt)
 	-- Clamp position
 	ppos.x = math.max(ppos.x, 0)
 	ppos.x = math.min(ppos.x, config.logical_size[1] - config.grid_size)
-	ppos.y = math.min(ppos.y, config:ground_level() - config.grid_size)
-
 	if pstate == "hurt" then
+		ppos.y = math.min(ppos.y, config:ground_level() - config.grid_size - 8)
+	else
+		ppos.y = math.min(ppos.y, config:ground_level() - config.grid_size)
+	end
+	if pstate == "hurt" then
+		local sw = pn.get_stopwatch(PEID)
+		pn.set_rotation(PEID, sw * 700)
+		pvel.x = -80
 		if pn.get_timer(PEID).running == false then
 			pstate = "move"
-			pn.set_timer(PEID, 2)
+			pn.set_timer(PEID, 1)
 			pn.set_rotation(PEID, 0)
 		end
 	else
+		pvel.x = 0
 		if player.is_invicible() then
 			local sw = pn.get_stopwatch(PEID)
 			if math.floor(sw / 0.1) % 2 == 0 then
