@@ -64,8 +64,7 @@ bool pn::game::update(float dt)
 	if (!update_result.valid())
 		throw std::runtime_error(std::format("runtime error: {}", sol::error{update_result}.what()));
 
-
-	return true;
+	return update_result;
 };
 
 void pn::game::draw()

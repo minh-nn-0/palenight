@@ -25,9 +25,9 @@ local function setup_obstacle_state(eid)
 end
 
 local function spawn_bat()
-	for i = 1,3 do
 		local bat = pn.add_entity()
 		pn.add_tag(bat, "bat")
+		pn.add_tag(bat, "obstacle")
 		pn.add_tag(bat, "no_gravity")
 		pn.set_image(bat, "tileset")
 		pn.set_tileanimation(bat, {
@@ -38,7 +38,7 @@ local function spawn_bat()
 		})
 		pn.set_scale(bat, config.pixel_size - 1.75, config.pixel_size - 1.75)
 		pn.set_position(bat,
-			config.logical_size[1] + i * 2,
+			config.logical_size[1],
 			config.logical_size[2] / 3 + (math.random(0, 3) * config.grid_size))
 		pn.set_velocity(bat,
 			math.random(-(config.base_velocity + 40), - (config.base_velocity - 40)),
@@ -47,12 +47,12 @@ local function spawn_bat()
 		pn.set_cbox(bat, util.scale_rect_logical(config.cbox_of["bat"]))
 		setup_obstacle_state(bat)
 		pn.set_stopwatch(bat)
-	end
 end
 
 local function spawn_duck()
 	local duck = pn.add_entity()
 	pn.add_tag(duck, "duck")
+	pn.add_tag(duck, "obstacle")
 	pn.add_tag(duck, "no_gravity")
 
 	pn.set_image(duck, "tileset")
@@ -79,6 +79,7 @@ local function spawn_box()
 	local box = pn.add_entity()
 	pn.add_tag(box, "box")
 	pn.add_tag(box, "no_gravity")
+	pn.add_tag(box, "obstacle")
 
 	pn.set_image(box, "tileset")
 	pn.set_tileanimation(box, {
