@@ -15,7 +15,10 @@ target_compile_definitions(palenight PRIVATE
 
 target_link_libraries(palenight PRIVATE beaver)
 
-install(FILES $<TARGET_RUNTIME_DLLS:palenight> DESTINATION bin/palenight)
-
+if (EMSCRIPTEN)
+	target_link_options(palenight PRIVATE --preload-file=assets --preload-file=scripts --preload-file=config.lua -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sUSE_SDL_TTF=2 -sUSE_SDL_MIXER=2) 
+	set_target_properties(palenight PROPERTIES SUFFIX ".html")
+endif()
 # Install the executable
+install(FILES $<TARGET_RUNTIME_DLLS:palenight> DESTINATION bin/palenight)
 install(TARGETS palenight RUNTIME DESTINATION bin/palenight)

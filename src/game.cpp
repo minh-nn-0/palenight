@@ -5,16 +5,25 @@
 #include <beaver/ecs/systems/animation.hpp>
 #include <beaver/ecs/systems/render_entity.hpp>
 using namespace beaver::component;
+#ifdef __EMSCRIPTEN__
+#include "/home/minhmacg/.cache/emscripten/sysroot/include/emscripten.h"
+#endif
+#ifdef __EMSCRIPTEN__
+constexpr std::string game_path()
+{
+	return "";
+};
+#else
 constexpr std::string game_path()
 {
 	return {GAMEPATH};
 };
-
+#endif
 void pn::game::load_config()
 {
 	try 
 	{
-		_lua.safe_script_file(game_path() + "/config.lua");
+		_lua.safe_script_file(game_path() + "config.lua");
 	} catch (const sol::error& e)
 	{
 		std::println("error loading script: {}", e.what()); 
@@ -25,7 +34,7 @@ void load_script(sol::state& lua)
 {	
 	try 
 	{
-		auto script_result = lua.safe_script_file(game_path() + "/scripts/main.lua");
+		auto script_result = lua.safe_script_file(game_path() + "scripts/main.lua");
 	} catch (const sol::error& e)
 	{
 		std::println("error loading script: {}", e.what()); 
@@ -44,6 +53,7 @@ pn::game::game(): _beaver("palenight", 1280, 720)
 	beaver::init_lua(_lua);
 	sol::table gametable = _lua["pn"].get_or_create<sol::table>();
 	gametable.set_function("gamepath", [&]() -> std::string {return game_path();});
+	SDL_RenderSetVSync(_beaver._graphics._rdr, 1);
 	load_config();
 	setup_binding();
 	load_script(_lua);
@@ -157,12 +167,36 @@ void pn::game::setup_binding()
 	gametable.set_function("cleanup_entities", [&]() {_entity_manager.clear_inactive();});
 	
 };
+
+#ifdef __EMSCRIPTEN__
+void rungame(void* arg)
+{
+	pn::game* game = static_cast<pn::game*>(arg);
+	SDL_Event sdlevent;
+	game->_beaver._gametime += 1.f/60;
+	while (SDL_PollEvent(&sdlevent))
+	{
+		game->_beaver._ctl.update(sdlevent);
+		if (sdlevent.type == SDL_QUIT) 
+		{
+		};
+	};
+
+	game->update(1.f/60);
+	
+	game->draw();
+	SDL_RenderPresent(game->_beaver._graphics._rdr);
+};
+#endif
 void pn::game::run()
 {
+#ifdef __EMSCRIPTEN__
+	emscripten_set_main_loop_arg(rungame, this, 60, 1);
+#else
 	beaver::run_game(_beaver, 
 			[&](float dt){return update(dt);},
 			[&]{draw();});
-
 	std::println("exiting game");
+#endif
 };
 
