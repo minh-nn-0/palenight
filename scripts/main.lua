@@ -13,6 +13,8 @@ function LOAD()
 	beaver.new_sound(pn.gamepath() .. "/assets/audios/pnattack.wav", "attack")
 	beaver.new_sound(pn.gamepath() .. "/assets/audios/pnjump.wav", "jump")
 	beaver.new_sound(pn.gamepath() .. "/assets/audios/duckquack.wav", "duckquack")
+	beaver.new_sound(pn.gamepath() .. "/assets/audios/pickupCoin.wav", "pickupcoin")
+	beaver.new_sound(pn.gamepath() .. "/assets/audios/pickupCoin(2).wav", "pickupheart")
 
 	beaver.new_music(pn.gamepath() .. "/assets/audios/man-is-he-mega.mp3", "bgm1")
 	beaver.new_music(pn.gamepath() .. "/assets/audios/kl-peach-game-over.mp3", "gameover")

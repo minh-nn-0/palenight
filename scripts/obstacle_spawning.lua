@@ -125,11 +125,10 @@ function obstacle_spawner.update(time, dt)
 		state = "spawning"
 		for _ = 1, progress do
 			local rand = math.random()
-			local otype = "duck"
-			--local otype = "box"
-			--if rand < 0.5 then otype = "duck"
-			--elseif rand < 0.8 then otype = "bat"
-			--end
+			local otype = "box"
+			if rand < 0.5 and progress >= 2 then otype = "bat"
+			elseif rand < 0.8 and progress >= 5 then otype = "duck"
+			end
 			table.insert(obstacles_to_spawn, otype)
 		end
 		time_passed_since_last_wave = 0

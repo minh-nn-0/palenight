@@ -1,6 +1,8 @@
 local util = require "utilities"
 local player = {
-	score = 0
+	score = 0,
+	health = 3,
+	coin = 0,
 }
 local FRAMES_DOG_MOVE = {{1, 300}, {0, 300}}
 local FRAMES_DOG_JUMP = {{2, 250}, {3, 250}}
@@ -8,11 +10,11 @@ local FRAMES_DOG_FALL = {{5, 150}};
 
 local JUMP_CHARGER = config.base_jump
 
-local HEALTH = 3
 
 function player.load()
 	PEID = pn.add_entity();
 	pn.add_tag(PEID, "player");
+	pn.add_tag(PEID, "stay_on_ground");
 	pn.set_position(PEID, 20, config:ground_level() - config.grid_size)
 	pn.set_velocity(PEID, 0, 0)
 	pn.set_scale(PEID, config.pixel_size, config.pixel_size)
@@ -64,17 +66,18 @@ function player.load()
 			pn.set_velocity(PEID, 0, vel.y)
 			pn.set_timer(PEID, 2)
 
-			HEALTH = HEALTH - 1
+			player.health = player.health - 1
 		end)
 	pn.set_state(PEID, "move")
 end
 function player.reset()
-	HEALTH = 3
+	player.health = 3
+	player.coin = 0
+	player.score = 0
+	pn.set_rotation(PEID, 0)
 	pn.set_state(PEID, "move")
 	pn.set_position(PEID, 20, config:ground_level() - config.grid_size)
 	pn.set_velocity(PEID, 0, 0)
-	pn.set_rotation(PEID, 0)
-	pn.score = 0
 end
 
 local function attack_animation()
@@ -101,7 +104,7 @@ function player.is_invicible()
 	return pn.get_previous_state(PEID) == "hurt" and pn.get_timer(PEID).running == true
 end
 
-function player.get_health() return HEALTH end
+function player.get_health() return player.health end
 function player.update(dt)
 	local ppos = pn.get_position(PEID)
 	local pvel = pn.get_velocity(PEID)
@@ -112,8 +115,6 @@ function player.update(dt)
 	ppos.x = math.min(ppos.x, config.logical_size[1] - config.grid_size)
 	if pstate == "hurt" then
 		ppos.y = math.min(ppos.y, config:ground_level() - config.grid_size - 8)
-	else
-		ppos.y = math.min(ppos.y, config:ground_level() - config.grid_size)
 	end
 	if pstate == "hurt" then
 		local sw = pn.get_stopwatch(PEID)
@@ -143,7 +144,6 @@ function player.update(dt)
 
 		if ppos.y >= config:ground_level() - config.grid_size then
 			pstate = "move"
-			pvel.y = 0
 		end
 
 		-- MOVEMENT

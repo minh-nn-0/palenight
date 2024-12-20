@@ -149,6 +149,16 @@ gamestate["ingame"] = {
 	end,
 	update = function(dt)
 		pn.update_movement(dt)
+		for _, og in ipairs(pn.get_entities_with_tags({"stay_on_ground"})) do
+			local pos = pn.get_position(og)
+			local vel = pn.get_velocity(og)
+			local cbox = pn.get_cbox(og)
+			local scale = pn.get_scale(og)
+			if pos.y + cbox.y * scale.y > config:ground_level() - cbox.h * scale.y then
+				pn.set_velocity(og, vel.x, 0)
+				pn.set_position(og, pos.x, config:ground_level() - (cbox.y + cbox.h) * scale.y)
+			end
+		end
 		starfield.update(stars, -80, dt)
 		player.update(dt)
 		obstacle_spawner.update(pn.get_stopwatch(timer),dt)
@@ -175,6 +185,23 @@ gamestate["ingame"] = {
 			end
 			if not pn.is_active(eid) then print(eid .. " just be inactive") end
 		end
+
+
+		-- collectible
+		for _,cl in ipairs(pn.get_entities_with_tags({"collectible"})) do
+			if pn.colliding_with(cl, PEID) and pn.get_state(PEID) ~= "hurt" then
+				if pn.has_tag(cl, "heart") then
+					player.health = math.min(player.health + 1,3)
+					beaver.play_sound("pickupheart")
+					pn.set_active(cl, false)
+				end
+				if pn.has_tag(cl, "coin") then
+					player.coin = player.coin + 1
+					beaver.play_sound("pickupcoin")
+					pn.set_active(cl, false)
+				end
+			end
+		end
 		pn.update_animation(dt)
 		pn.update_timer(dt)
 		pn.update_countdown(dt)
@@ -192,9 +219,6 @@ gamestate["ingame"] = {
 		beaver.set_draw_color(255,255,255,255)
 		beaver.draw_line(0, config:ground_level(), config.logical_size[1], config:ground_level())
 
-		beaver.draw_text(450, 10, "mago32", "SCORE: " .. player.score)
-		beaver.draw_text(250, 10, "mago32", "TIME: " .. string.format("%.3f", pn.get_stopwatch(timer)))
-
 
 		-- Draw heart
 		for i = 1,3 do
@@ -203,6 +227,16 @@ gamestate["ingame"] = {
 				dst = {x = 40 * i, y = 10, w = 30, h = 30}
 			})
 		end
+
+		-- Draw coin
+		beaver.draw_texture("tileset", {
+			src = {x = 24, y = 56, w = 4, h = 4},
+			dst = {x = 250, y = 10, w = 20, h = 20}
+		})
+		beaver.draw_text(280, 5, "mago32", "" .. player.coin)
+
+		beaver.draw_text(450, 10, "mago", "TIME: " .. string.format("%.3f", pn.get_stopwatch(timer)))
+		beaver.draw_text(550, 10, "mago", "SCORE: " .. player.score)
 		if config.debug then
 			for _, eid in ipairs(pn.get_active_entities()) do
 				local cbox = pn.get_cbox(eid)

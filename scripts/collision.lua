@@ -33,6 +33,32 @@ local random_color = {
 }
 
 
+local function spawn_coin_or_heart(position)
+	if math.random() > 0.5 then
+		local heart = pn.add_entity()
+		pn.add_tag(heart, "heart")
+		pn.add_tag(heart, "collectible")
+		pn.add_tag(heart, "stay_on_ground")
+		pn.set_position(heart, position.x, position.y)
+		pn.set_velocity(heart, 0, -400)
+		pn.set_scale(heart, config.scale_of["heart"][1], config.scale_of["heart"][2])
+		pn.set_cbox(heart, config.cbox_of["heart"])
+		pn.set_image(heart, "tileset")
+		pn.set_image_source(heart, 8,48,8,8)
+	else
+		local coin = pn.add_entity()
+		pn.add_tag(coin, "coin")
+		pn.add_tag(coin, "collectible")
+		pn.add_tag(coin, "stay_on_ground")
+		pn.set_position(coin, position.x, position.y)
+		pn.set_velocity(coin, 0, -400)
+		pn.set_scale(coin, config.scale_of["coin"][1], config.scale_of["coin"][2])
+		pn.set_cbox(coin, config.cbox_of["coin"])
+		pn.set_image(coin, "tileset")
+		pn.set_image_source(coin, 24,56,4,4)
+	end
+end
+
 
 function collision.update()
 	for _, eid in ipairs(pn.get_active_entities()) do
@@ -48,7 +74,7 @@ function collision.update()
 					local pos= pn.get_position(coll)
 					local vel = pn.get_velocity(coll)
 
-					pn.set_velocity(coll, vel.x, -500)
+					pn.set_velocity(coll, vel.x, -300)
 					local hitx = pos.x + cbox.x + cbox.w / 2
 					local hity = pos.y + cbox.y + cbox.h / 2
 
@@ -70,6 +96,8 @@ function collision.update()
 							{time = 1.0, color = {cl2[1], cl2[2], cl2[3], cl2[4]}},
 						})
 					end
+
+					if (math.random() > 0.5) then spawn_coin_or_heart(pos) end
 				end
 			end
 		end
@@ -83,11 +111,9 @@ function collision.update()
 
 		-- player (every "normal" entity except attack animation colliding with player that is not invicible)
 		if pn.colliding_with(eid, PEID) and not player.is_invicible() and
-			pn.has_tag(eid, "hurtable")then
-			if (pn.get_state(PEID) ~= "hurt") then
+			pn.has_tag(eid, "hurtable") and pn.get_state(PEID) ~= "hurt" then
 				pn.set_state(PEID, "hurt")
 				beaver.play_sound("hurt")
-			end
 		end
 	end
 end
