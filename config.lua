@@ -2,7 +2,6 @@ package.path = package.path .. ";" .. pn.gamepath() .. "/?.lua"
 package.path = package.path .. ";" .. pn.gamepath() .. "/scripts/?.lua"
 
 beaver = require "beaver"
-geo = require "geometry"
 pn = pn or {}
 
 local util = require "utilities"
@@ -17,13 +16,22 @@ config = {
 	base_velocity = 100,
 	base_jump = 250,
 	max_jump = 450,
+	scale_of = {
+		["player"] = {5, 5},
+		["duck"] = {3.5, 3.5},
+		["bat"] = {3, 3},
+		["box"] = {5, 5},
+		["coin"] = {5, 5},
+		["attack"] = {5, 5},
+	},
 	cbox_of = {
 		["player"] = util.make_rect(0,3,7,4),
 		["duck"] = util.make_rect(0,0,7,5),
 		["bat"] = util.make_rect(0,0,7,4),
 		["box"] = util.make_rect(0,3,5,5),
 		["coin"] = util.make_rect(0,0,5,5),
-		["attack"] = util.make_rect(2,3,13,4),
+		["attack"] = util.make_rect(2,4,11,4),
+		["egg"] = util.make_rect(0,0,2,2),
 	}
 }
 

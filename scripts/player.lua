@@ -10,67 +10,71 @@ local JUMP_CHARGER = config.base_jump
 
 local HEALTH = 3
 
-PEID = pn.add_entity();
-pn.add_tag(PEID, "player");
-pn.set_position(PEID, 20, config:ground_level() - config.grid_size)
-pn.set_velocity(PEID, 0, 0)
-pn.set_pivot(PEID, 3,6)
-
-pn.set_stopwatch(PEID)
-pn.set_cbox(PEID, util.scale_rect_logical(config.cbox_of["player"]))
-pn.set_image(PEID, "spritesheet_dog")
-pn.set_scale(PEID, config.pixel_size, config.pixel_size)
-
-pn.set_state_entry(PEID, "move",
-	function()
-		pn.set_tileanimation(PEID, {
-			frames = FRAMES_DOG_MOVE,
-			framewidth = 8,
-			frameheight = 8,
-			["repeat"] = true
-		})
-	end)
-
-pn.set_state_entry(PEID, "jump",
-	function()
-		pn.set_tileanimation(PEID, {
-			frames = FRAMES_DOG_JUMP,
-			framewidth = 8,
-			frameheight = 8,
-			["repeat"] = false,
-		})
-	end)
-
-pn.set_state_entry(PEID, "fall",
-	function()
-		pn.set_tileanimation(PEID, {
-			frames = FRAMES_DOG_FALL,
-			framewidth = 8,
-			frameheight = 8,
-			["repeat"] = false,
-		})
-	end)
-pn.set_state_entry(PEID, "hurt",
-	function()
-		pn.set_tileanimation(PEID, {
-			frames = {{1,300}},
-			framewidth = 8,
-			frameheight = 8,
-			["repeat"] = false,
-		})
-		pn.set_rotation(PEID, math.random(-90,90))
-		local vel = pn.get_velocity(PEID)
-		pn.set_velocity(PEID, 0, vel.y)
-		pn.set_timer(PEID, 2)
-
-		HEALTH = HEALTH - 1
-	end)
 function player.load()
+	PEID = pn.add_entity();
+	pn.add_tag(PEID, "player");
+	pn.set_position(PEID, 20, config:ground_level() - config.grid_size)
+	pn.set_velocity(PEID, 0, 0)
+	pn.set_scale(PEID, config.pixel_size, config.pixel_size)
+	pn.set_pivot(PEID, 3,6)
+
+	pn.set_stopwatch(PEID)
+	pn.set_cbox(PEID, config.cbox_of["player"])
+	pn.set_image(PEID, "spritesheet_dog")
+
+	pn.set_state_entry(PEID, "move",
+		function()
+			pn.set_tileanimation(PEID, {
+				frames = FRAMES_DOG_MOVE,
+				framewidth = 8,
+				frameheight = 8,
+				["repeat"] = true
+			})
+		end)
+
+	pn.set_state_entry(PEID, "jump",
+		function()
+			pn.set_tileanimation(PEID, {
+				frames = FRAMES_DOG_JUMP,
+				framewidth = 8,
+				frameheight = 8,
+				["repeat"] = false,
+			})
+		end)
+
+	pn.set_state_entry(PEID, "fall",
+		function()
+			pn.set_tileanimation(PEID, {
+				frames = FRAMES_DOG_FALL,
+				framewidth = 8,
+				frameheight = 8,
+				["repeat"] = false,
+			})
+		end)
+	pn.set_state_entry(PEID, "hurt",
+		function()
+			pn.set_tileanimation(PEID, {
+				frames = {{1,300}},
+				framewidth = 8,
+				frameheight = 8,
+				["repeat"] = false,
+			})
+			pn.set_rotation(PEID, math.random(-90,90))
+			local vel = pn.get_velocity(PEID)
+			pn.set_velocity(PEID, 0, vel.y)
+			pn.set_timer(PEID, 2)
+
+			HEALTH = HEALTH - 1
+		end)
+	pn.set_state(PEID, "move")
+end
+function player.reset()
 	HEALTH = 3
 	pn.set_state(PEID, "move")
 	pn.set_position(PEID, 20, config:ground_level() - config.grid_size)
 	pn.set_velocity(PEID, 0, 0)
 	pn.set_rotation(PEID, 0)
+	pn.score = 0
 end
 
 local function attack_animation()
@@ -78,7 +82,7 @@ local function attack_animation()
 		beaver.play_sound("attack")
 		local attackanim = pn.add_entity()
 		pn.set_image(attackanim, "tileset")
-		pn.set_scale(attackanim, 5,5)
+		pn.set_scale(attackanim, config.pixel_size, config.pixel_size)
 		pn.set_tileanimation(attackanim, {
 			frames = {{8,150}, {9,150}},
 			framewidth = 16,
@@ -87,7 +91,7 @@ local function attack_animation()
 		})
 		pn.add_tag(attackanim, "one_time_animation")
 		pn.add_tag(attackanim, "attack_anim")
-		pn.set_cbox(attackanim, util.scale_rect_logical(config.cbox_of["attack"]))
+		pn.set_cbox(attackanim, config.cbox_of["attack"])
 
 		pn.add_tag(PEID, "attacking")
 	end
@@ -139,6 +143,7 @@ function player.update(dt)
 
 		if ppos.y >= config:ground_level() - config.grid_size then
 			pstate = "move"
+			pvel.y = 0
 		end
 
 		-- MOVEMENT

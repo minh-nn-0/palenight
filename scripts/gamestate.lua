@@ -2,6 +2,7 @@ local starfield = require "starfield"
 local particle = require "particle"
 local player = require "player"
 local obstacle_spawner = require "obstacle_spawning"
+local obstacle = require "obstacle"
 local collision = require "collision"
 
 local gamestate = {}
@@ -17,7 +18,6 @@ function gamestate.load()
 	player.load()
 	beaver.set_volume_music(40)
 	beaver.play_music("bgm1")
-
 end
 
 local stars = starfield.new(30)
@@ -120,10 +120,7 @@ gamestate["menu"] = {
 gamestate["ingame"] = {
 	load = function()
 		pn.set_stopwatch(timer)
-		player.load()
-
 		obstacle_spawner.init()
-
 		SMOKE_PE = pn.add_entity()
 		pn.set_particle_emitter_config(SMOKE_PE, {
 			emitting_position = {x = 200, y = 200},
@@ -142,7 +139,10 @@ gamestate["ingame"] = {
 		})
 
 		pn.set_particle_emitter_auto(SMOKE_PE, false)
-
+	end,
+	reset = function()
+		pn.set_stopwatch(timer)
+		player.reset()
 		for _, eid in ipairs(pn.get_entities_with_tags({"obstacle"})) do
 			pn.set_active(eid, false)
 		end
@@ -151,10 +151,10 @@ gamestate["ingame"] = {
 		pn.update_movement(dt)
 		starfield.update(stars, -80, dt)
 		player.update(dt)
-		obstacle_spawner.update(dt)
+		obstacle_spawner.update(pn.get_stopwatch(timer),dt)
+		obstacle.update(dt)
 		collision.update()
 		for _,eid in ipairs(pn.get_active_entities()) do
-
 			if pn.has_tag(eid,"one_time_animation") and pn.get_animation(eid).playing == false then
 				pn.set_active(eid, false)
 			end
@@ -192,32 +192,36 @@ gamestate["ingame"] = {
 		beaver.set_draw_color(255,255,255,255)
 		beaver.draw_line(0, config:ground_level(), config.logical_size[1], config:ground_level())
 
-		beaver.draw_text(400, 10, "mago", "SCORE: " .. player.score)
-		beaver.draw_text(200, 10, "mago", "TIME: " .. string.format("%.f", pn.get_stopwatch(timer)))
+		beaver.draw_text(450, 10, "mago32", "SCORE: " .. player.score)
+		beaver.draw_text(250, 10, "mago32", "TIME: " .. string.format("%.3f", pn.get_stopwatch(timer)))
 
 
 		-- Draw heart
 		for i = 1,3 do
 			beaver.draw_texture("tileset", {
 				src = player.get_health() >= i and {x = 8, y = 48, w = 8, h = 8} or {x = 0, y  = 48, w = 8, h = 8},
-				dst = {x = 5 + 20 * i, y = 10, w = 20, h = 20}
+				dst = {x = 40 * i, y = 10, w = 30, h = 30}
 			})
 		end
 		if config.debug then
 			for _, eid in ipairs(pn.get_active_entities()) do
 				local cbox = pn.get_cbox(eid)
+				local scale = pn.get_scale(eid)
 				if cbox then
 					local pos = pn.get_position(eid)
-					beaver.draw_rectangle(pos.x + cbox.x, pos.y + cbox.y, cbox.w, cbox.h, true)
+					beaver.draw_rectangle(pos.x + cbox.x * scale.x, pos.y + cbox.y * scale.y, cbox.w * scale.x, cbox.h * scale.y, true)
 				end
 			end
 
 			for _, eid in ipairs(pn.get_active_entities()) do
 				local pos = pn.get_position(eid)
-				if pos then
-					beaver.draw_text(pos.x, pos.y - config.grid_size, "mago", "eid " .. eid .. "\n"
+				local vel = pn.get_velocity(eid)
+				if pos and vel then
+					beaver.draw_text(pos.x, pos.y - config.grid_size - 30, "mago", "eid " .. eid .. "\n"
 																			.. "posx " .. string.format("%.3f", pos.x) .. "\n"
-																			.. "posy " .. string.format("%.3f", pos.y))
+																			.. "posy " .. string.format("%.3f", pos.y) .. "\n"
+																			.. "velx " .. string.format("%.3f", vel.x) .. "\n"
+																			.. "vely " .. string.format("%.3f", vel.y))
 				end
 			end
 		beaver.draw_text(10,10,"mago", "active entities size ".. #pn.get_active_entities())
@@ -227,24 +231,17 @@ gamestate["ingame"] = {
 	end
 }
 
+local survived_time = ""
 gamestate["gameover"] = {
 	load = function()
 		text_in = true
 		text_out = false
-		arrow = pn.add_entity()
-		pn.set_position(arrow, -500, -500)
-		pn.set_scale(arrow, 3,3)
-		pn.set_image(arrow, "tileset")
-		pn.set_image_source(arrow, 24,40,8,8)
-
+		survived_time = string.format("%.3f", pn.get_stopwatch(timer))
+		pn.set_stopwatch(timer)
+		beaver.play_music("gameover")
 	end,
 	update = function(dt)
 		starfield.update(stars, -80, dt)
-		pn.update_animation(dt/5)
-		pn.update_timer(dt/5)
-		obstacle_spawner.update(dt/5)
-		pn.update_timer(dt/10)
-		pn.update_countdown(dt/5)
 		if (text_in == true) then
 			local t = pn.get_stopwatch(timer)
 			logo_posy = logo_start_posy + (logo_end_posy - logo_start_posy) * ease_in_out_back(math.min(t / logo_tween_time,1))
@@ -252,18 +249,14 @@ gamestate["gameover"] = {
 			quit_posy = quit_start_posy + (quit_end_posy - quit_start_posy) * ease_in_out_back(math.min(t / text_tween_time, 1))
 			if t >= text_tween_time then text_in = false end
 		else
-			move_arrow()
 			if beaver.get_input("X") == 1 then
-				if option == 2 then return false
-				else
-					pn.set_stopwatch(timer)
-					text_out = true
-				end
+				pn.set_stopwatch(timer)
+				beaver.play_music("bgm1")
+				text_out = true
 			end
 		end
 
 		if text_out == true then
-			pn.update_timer(dt)
 			pn.set_position(arrow, -500, -500)
 			local t = pn.get_stopwatch(timer)
 			logo_posy = logo_end_posy + (logo_start_posy - logo_end_posy) * ease_in_out_back(math.min(t / logo_tween_time,1))
@@ -271,9 +264,10 @@ gamestate["gameover"] = {
 			quit_posy = quit_end_posy + (quit_start_posy - quit_end_posy) * ease_in_out_back(math.min(t / text_tween_time, 1))
 			if t >= text_tween_time then
 				state = "ingame"
-				gamestate[state].load()
+				gamestate[state].reset()
 			end
 		end
+		pn.update_timer(dt)
 		return true
 	end,
 
@@ -281,9 +275,13 @@ gamestate["gameover"] = {
 		starfield.draw(stars)
 		beaver.set_draw_color(255,255,255,255)
 		beaver.draw_line(0, config:ground_level(), config.logical_size[1], config:ground_level())
-		beaver.draw_text_centered(config.logical_size[1]/2, logo_posy, "mago100", "GAMEOVER")
-		beaver.draw_text_centered(config.logical_size[1]/2, start_posy, "mago50", "START")
-		beaver.draw_text_centered(config.logical_size[1]/2, quit_posy, "mago50", "QUIT")
+		beaver.draw_text_centered(config.logical_size[1]/2, logo_posy - 100, "mago100", "GAMEOVER")
+		beaver.draw_text_centered(config.logical_size[1]/2, logo_posy + 30, "mago32", "Time survived: " .. survived_time .."     Score earned: " .. player.score)
+
+		local t = pn.get_stopwatch(timer)
+		if math.floor(t / 0.5) % 2 == 0 then
+			beaver.draw_text_centered(config.logical_size[1]/2, start_posy + 20, "mago32", "Press X to start again")
+		end
 	end
 }
 

@@ -16,7 +16,7 @@ constexpr std::string game_path()
 #else
 constexpr std::string game_path()
 {
-	return {GAMEPATH};
+	return {std::string(GAMEPATH) + "/"};
 };
 #endif
 void pn::game::load_config()
@@ -186,6 +186,8 @@ void rungame(void* arg)
 	
 	game->draw();
 	SDL_RenderPresent(game->_beaver._graphics._rdr);
+	for (auto& [_,v]: game->_beaver._ctl._keystate)
+		if (v > 0) v++;
 };
 #endif
 void pn::game::run()
