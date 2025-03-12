@@ -18,7 +18,7 @@ local function duck_lay_egg(duck)
 	pn.add_tag(egg, "egg")
 	pn.add_tag(egg, "hurtable")
 	pn.set_image(egg, "tileset")
-	pn.set_image_source(egg, 24, 48, 2, 2)
+	pn.set_image_source(egg, 32, 48, 4, 4)
 end
 
 local function egg_fall_to_ground(egg)

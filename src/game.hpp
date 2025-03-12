@@ -1,7 +1,10 @@
 #pragma once
 
 #include <beaver/core.hpp>
-#include <beaver/scripting.hpp>
+#include <beaver/ecs/core.hpp>
+#include <beaver/scripting/scripting_ecs.hpp>
+#include <beaver/scripting/scripting_core_components.hpp>
+#include <beaver/scripting/scripting_core.hpp>
 namespace pn
 {
 	using fsm = beaver::component::fsm<std::string>;

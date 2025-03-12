@@ -33,7 +33,7 @@ config = {
 		["coin"] = util.make_rect(0,0,4,4),
 		["attack"] = util.make_rect(2,4,11,4),
 		["heart"] = util.make_rect(0,0,8,6),
-		["egg"] = util.make_rect(0,0,2,2),
+		["egg"] = util.make_rect(0,0,4,4),
 	}
 }
 

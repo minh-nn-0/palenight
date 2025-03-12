@@ -50,7 +50,7 @@ void load_script(sol::state& lua)
 
 pn::game::game(): _beaver("palenight", 1280, 720)
 {
-	beaver::init_lua(_lua);
+	beaver::scripting::init_lua(_lua);
 	sol::table gametable = _lua["pn"].get_or_create<sol::table>();
 	gametable.set_function("gamepath", [&]() -> std::string {return game_path();});
 	SDL_RenderSetVSync(_beaver._graphics._rdr, 1);
@@ -93,10 +93,11 @@ void pn::game::draw()
 
 void pn::game::setup_binding()
 {
-	beaver::bind_core(_beaver, _lua);
+	beaver::scripting::bind_core(_beaver, _lua);
 	
 	sol::table gametable = _lua["pn"].get<sol::table>();
-	beaver::bind_ecs_core_components(_entity_manager, _beaver, gametable, _lua);
+	beaver::scripting::bind_entity(_entity_manager, gametable);
+	beaver::scripting::bind_ecs_core_components(_entity_manager, _beaver, gametable, _lua);
 	gametable.set_function("update_movement", [&](float dt)
 			{
 				for (auto&& eid:_entity_manager.with<position, velocity>()) 
@@ -150,9 +151,9 @@ void pn::game::setup_binding()
 			});
 	gametable.set_function("update_state", [&]()
 			{
-				for (auto&& eid: _entity_manager.with<beaver::fsmstr>())
+				for (auto&& eid: _entity_manager.with<beaver::component::fsmstr>())
 				{
-					_entity_manager.get_component<beaver::fsmstr>(eid)->update();
+					_entity_manager.get_component<beaver::component::fsmstr>(eid)->update();
 				};
 			});
 	gametable.set_function("find_collisions", [&](std::size_t eid) -> std::vector<std::size_t>
